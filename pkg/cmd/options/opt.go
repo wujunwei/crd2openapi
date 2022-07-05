@@ -9,6 +9,7 @@ import (
 type CRDConvertOptions struct {
 	StdOut io.Writer
 	StdErr io.Writer
+	StdIn  io.Writer
 	file   string
 }
 
@@ -35,12 +36,8 @@ func (o CRDConvertOptions) Config() (*openapi.Config, error) {
 }
 
 // NewCRDConvertOptions creates default options of this command.
-func NewCRDConvertOptions(out, errOut io.Writer) *CRDConvertOptions {
-	o := &CRDConvertOptions{
-
-		StdOut: out,
-		StdErr: errOut,
-	}
+func NewCRDConvertOptions() *CRDConvertOptions {
+	o := &CRDConvertOptions{}
 
 	return o
 }

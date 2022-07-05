@@ -3,15 +3,14 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/wujunwei/crd2openapi/pkg/cmd/options"
-	"io"
 )
 
-func NewCommand(out, errOut io.Writer, stopCh <-chan struct{}) *cobra.Command {
-	o := options.NewCRDConvertOptions(out, errOut)
+func NewRootCommand() *cobra.Command {
+	o := options.NewCRDConvertOptions()
 
 	cmd := &cobra.Command{
-		Short: "Launch an API extensions API server",
-		Long:  "Launch an API extensions API server",
+		Short: "Convert crd to openapi",
+		Long:  "Convert crd to openapi",
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.Complete(); err != nil {
 				return err
@@ -19,7 +18,7 @@ func NewCommand(out, errOut io.Writer, stopCh <-chan struct{}) *cobra.Command {
 			if err := o.Validate(); err != nil {
 				return err
 			}
-			if err := Run(o, stopCh); err != nil {
+			if err := Run(o); err != nil {
 				return err
 			}
 			return nil
@@ -31,7 +30,7 @@ func NewCommand(out, errOut io.Writer, stopCh <-chan struct{}) *cobra.Command {
 	return cmd
 }
 
-func Run(o *options.CRDConvertOptions, stopCh <-chan struct{}) error {
+func Run(o *options.CRDConvertOptions) error {
 	config, err := o.Config()
 	if err != nil {
 		return err
