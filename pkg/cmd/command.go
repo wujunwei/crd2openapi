@@ -40,5 +40,5 @@ func Run(o *options.CRDConvertOptions) error {
 	if err != nil {
 		return err
 	}
-	return cmd.Convert(nil, "")
+	return cmd.Do()
 }
