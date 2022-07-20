@@ -17,7 +17,7 @@ type CRDConvertOptions struct {
 }
 
 // AddFlags adds the apiextensions-apiserver flags to the flagset.
-func (o CRDConvertOptions) AddFlags(fs *pflag.FlagSet) {
+func (o *CRDConvertOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&o.file, "file", "f", "-", "filename or path to the CRD to be converted.")
 	fs.StringVarP(&o.output, "output", "o", "-", "out openapi json file.")
 	fs.StringVarP(&o.title, "title", "t", "kubernetes crd", "the tile of the swagger json.")
@@ -46,7 +46,7 @@ func (o *CRDConvertOptions) Complete() error {
 	}
 
 	if o.output != "-" {
-		open, err := os.Open(o.output)
+		open, err := os.OpenFile(o.output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func (o *CRDConvertOptions) Complete() error {
 
 // Config returns an convert configuration.
 func (o CRDConvertOptions) Config() (*openapi.Config, error) {
-	conf := &openapi.Config{CRDFiles: o.InputFIle, Out: o.Out}
+	conf := &openapi.Config{CRDFiles: o.InputFIle, Out: o.Out, Title: o.title}
 	return conf, nil
 }
 

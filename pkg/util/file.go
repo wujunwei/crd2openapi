@@ -1,6 +1,9 @@
 package util
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 func ReadAllFile(path string, recursive bool) ([]*os.File, error) {
 	stat, err := os.Stat(path)
@@ -31,7 +34,7 @@ func ReadDir(dir *os.File) ([]*os.File, error) {
 		if d.IsDir() {
 			continue
 		}
-		open, err := os.Open(d.Name())
+		open, err := os.Open(filepath.Join(dir.Name(), d.Name()))
 		if err != nil {
 			return nil, err
 		}

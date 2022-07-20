@@ -5,18 +5,28 @@ import (
 	"errors"
 	"fmt"
 	"github.com/wujunwei/crd2openapi/pkg/openapi/build"
-	"gopkg.in/yaml.v3"
 	"io"
 	extensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	swagggerbuilder "k8s.io/apiextensions-apiserver/pkg/controller/openapi/builder"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/kube-openapi/pkg/builder"
 	"k8s.io/kube-openapi/pkg/validation/spec"
 	"os"
 )
+
+var schema *runtime.Scheme
+
+func init() {
+	schema = runtime.NewScheme()
+	extensionv1.AddToScheme(schema)
+}
 
 type Config struct {
 	Out      *os.File
 	CRDFiles []*os.File
 	Err      io.Writer
+	Title    string
 }
 
 func (c *Config) Complete() *Config {
@@ -31,6 +41,7 @@ func (c Config) New() (Converter, error) {
 		Out:       c.Out,
 		Err:       c.Err,
 		CRDReader: c.CRDFiles,
+		Title:     c.Title,
 	}, nil
 }
 
@@ -39,17 +50,20 @@ type Converter struct {
 	Out       *os.File
 	Err       io.Writer
 	CRDReader []*os.File
+	Title     string
 }
 
 func (c *Converter) analyzeCRD() []*extensionv1.CustomResourceDefinition {
+
 	var crds []*extensionv1.CustomResourceDefinition
 	for _, file := range c.CRDReader {
-		decode := yaml.NewDecoder(file)
+		decode := yaml.NewYAMLOrJSONDecoder(file, 4096)
 		defer func() { _ = file.Close() }()
-		decode.KnownFields(false)
-		crd := &extensionv1.CustomResourceDefinition{}
 		for {
-			err := decode.Decode(crds)
+			raw := &runtime.RawExtension{}
+			crd := &extensionv1.CustomResourceDefinition{}
+			err := decode.Decode(raw)
+			_ = json.Unmarshal(raw.Raw, crd)
 			if err != nil {
 				if err == io.EOF {
 					break
@@ -58,17 +72,32 @@ func (c *Converter) analyzeCRD() []*extensionv1.CustomResourceDefinition {
 					continue
 				}
 			}
+
 			crds = append(crds, crd)
 		}
 	}
 	return crds
 }
+
+//Complete todo 配置版本
+func (c *Converter) Complete(swagger *spec.Swagger) {
+	if swagger.Info == nil {
+		swagger.Info = &spec.Info{
+			VendorExtensible: spec.VendorExtensible{Extensions: map[string]interface{}{"buildBy": "convert tool"}},
+			InfoProps:        spec.InfoProps{Description: "kubernetes crd doc", Title: c.Title, Version: "1.0.0"},
+		}
+	}
+	swagger.Schemes = []string{"https"}
+
+	swagger.Swagger = builder.OpenAPIVersion
+}
+
 func (c *Converter) Do() error {
 	CRDs := c.analyzeCRD()
 	if len(CRDs) == 0 {
 		return errors.New("no available crd found")
 	}
-	var stisticSpec = &spec.Swagger{}
+	var staticSpec = &spec.Swagger{}
 	var allSpecs []*spec.Swagger
 	for _, resourceDefinition := range CRDs {
 		specs, err := build.NewSwaggerV2Converter().Convert(resourceDefinition)
@@ -77,7 +106,8 @@ func (c *Converter) Do() error {
 		}
 		allSpecs = append(allSpecs, specs...)
 	}
-	mergeSpecs, err := swagggerbuilder.MergeSpecs(stisticSpec, allSpecs...)
+	mergeSpecs, err := swagggerbuilder.MergeSpecs(staticSpec, allSpecs...)
+	c.Complete(mergeSpecs)
 	if err != nil {
 		return err
 	}
