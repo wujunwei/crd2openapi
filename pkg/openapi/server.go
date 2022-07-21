@@ -13,6 +13,7 @@ import (
 	"k8s.io/kube-openapi/pkg/builder"
 	"k8s.io/kube-openapi/pkg/validation/spec"
 	"os"
+	"strings"
 )
 
 var schema *runtime.Scheme
@@ -23,10 +24,14 @@ func init() {
 }
 
 type Config struct {
-	Out      *os.File
-	CRDFiles []*os.File
-	Err      io.Writer
-	Title    string
+	Out         *os.File
+	CRDFiles    []*os.File
+	Err         io.Writer
+	Title       string
+	Version     string
+	Pretty      bool
+	Indent      int
+	Description string
 }
 
 func (c *Config) Complete() *Config {
@@ -38,19 +43,27 @@ func (c *Config) Complete() *Config {
 }
 func (c Config) New() (Converter, error) {
 	return Converter{
-		Out:       c.Out,
-		Err:       c.Err,
-		CRDReader: c.CRDFiles,
-		Title:     c.Title,
+		Out:         c.Out,
+		Err:         c.Err,
+		CRDReader:   c.CRDFiles,
+		Title:       c.Title,
+		Indent:      c.Indent,
+		Version:     c.Version,
+		Pretty:      c.Pretty,
+		Description: c.Description,
 	}, nil
 }
 
 //Converter crd to openapi json file
 type Converter struct {
-	Out       *os.File
-	Err       io.Writer
-	CRDReader []*os.File
-	Title     string
+	Out         *os.File
+	Err         io.Writer
+	CRDReader   []*os.File
+	Title       string
+	Version     string
+	Pretty      bool
+	Indent      int
+	Description string
 }
 
 func (c *Converter) analyzeCRD() []*extensionv1.CustomResourceDefinition {
@@ -79,12 +92,12 @@ func (c *Converter) analyzeCRD() []*extensionv1.CustomResourceDefinition {
 	return crds
 }
 
-//Complete todo 配置版本
+//Complete fill some fields
 func (c *Converter) Complete(swagger *spec.Swagger) {
 	if swagger.Info == nil {
 		swagger.Info = &spec.Info{
 			VendorExtensible: spec.VendorExtensible{Extensions: map[string]interface{}{"buildBy": "convert tool"}},
-			InfoProps:        spec.InfoProps{Description: "kubernetes crd doc", Title: c.Title, Version: "1.0.0"},
+			InfoProps:        spec.InfoProps{Description: c.Description, Title: c.Title, Version: c.Version},
 		}
 	}
 	swagger.Schemes = []string{"https"}
@@ -111,9 +124,12 @@ func (c *Converter) Do() error {
 	if err != nil {
 		return err
 	}
-	// todo 支持格式化输出json
 	enc := json.NewEncoder(c.Out)
 	defer c.Out.Close()
+	if c.Pretty {
+		enc.SetIndent("", strings.Repeat(" ", c.Indent))
+	}
+
 	err = enc.Encode(mergeSpecs)
 	if err != nil {
 		return err

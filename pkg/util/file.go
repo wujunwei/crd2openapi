@@ -23,7 +23,6 @@ func ReadAllFile(path string, recursive bool) ([]*os.File, error) {
 	return []*os.File{f}, nil
 }
 
-//ReadDir todo 配置读取文件夹深度
 func ReadDir(dir *os.File) ([]*os.File, error) {
 	Dirs, err := dir.Readdir(-1)
 	if err != nil {
@@ -50,7 +49,7 @@ func ReadDirRecursively(dir *os.File) ([]*os.File, error) {
 	var res []*os.File
 	for _, d := range Dirs {
 		if d.IsDir() {
-			file, err := os.OpenFile(d.Name(), os.O_RDONLY, d.Mode())
+			file, err := os.OpenFile(filepath.Join(dir.Name(), d.Name()), os.O_RDONLY, d.Mode())
 			if err != nil {
 				return nil, err
 			}
@@ -60,7 +59,7 @@ func ReadDirRecursively(dir *os.File) ([]*os.File, error) {
 			}
 			res = append(res, recursively...)
 		} else {
-			open, err := os.Open(d.Name())
+			open, err := os.Open(filepath.Join(dir.Name(), d.Name()))
 			if err != nil {
 				return nil, err
 			}
