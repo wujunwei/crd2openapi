@@ -27,7 +27,7 @@ func (o *CRDConvertOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&o.output, "output", "o", "-", "out openapi json file.")
 	fs.BoolVarP(&o.pretty, "pretty", "p", false, "print the json pretty.")
 	fs.StringVarP(&o.title, "title", "t", "kubernetes crd", "the tile of the swagger json.")
-	fs.IntVarP(&o.indent, "output", "o", 4, "the indent of json line , only enable when pretty is true.")
+	fs.IntVarP(&o.indent, "indent", "i", 4, "the indent of json line , only enable when pretty is true.")
 	fs.StringVarP(&o.version, "version", "v", "1.0.0", "the version of the swagger json.")
 	fs.StringVarP(&o.description, "description", "d", "kubernetes crd doc", "the description of the swagger json.")
 }
