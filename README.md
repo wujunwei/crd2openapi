@@ -5,7 +5,7 @@ A tool for converting CRD (Custom Resource Definition) to open api json
 
 | name        | short | type   | default            | usage                                                      |
 |-------------|-------|--------|--------------------|------------------------------------------------------------|
-| file        | f     | string | -  (stdout)        | filename or path to the CRD to be converted.               |
+| file        | f     | string | - (stdout)         | filename or path to the CRD to be converted.               |
 | output      | o     | string | - (stdout)         | out openapi json file.                                     |
 | pretty      | p     | bool   | true               | print the json pretty.                                     |
 | title       | t     | string | empty string       | the tile of the swagger json.                              |
