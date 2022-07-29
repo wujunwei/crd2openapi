@@ -18,3 +18,13 @@ A tool for converting CRD (Custom Resource Definition) to open api json
 - support openapi style json.
 - support Built-in swagger server.
 - support post-render.
+
+## JetBrains
+
+[![JetBrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png)](https://www.jetbrains.com)
+
+**crd2openapi** was created using awesome **[JetBrains]** IDE
+**Thank you for the Open Source License!**
+
+[JetBrains]: https://www.jetbrains.com/?from=wujunwei
+[Goland]: https://www.jetbrains.com/goland/?from=wujunwei
